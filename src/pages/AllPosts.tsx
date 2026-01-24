@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Post } from '../types/posts';
 import { postsApi } from '../api/posts';
 import { useAuthStore } from '../store/auth/useAuthStore';
+import { toast } from 'sonner';
 
 function AllPosts() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -28,10 +29,6 @@ function AllPosts() {
   }, []);
 
   const handleDelete = async (postId: number) => {
-    if (!window.confirm('Вы уверены, что хотите удалить этот пост?')) {
-      return;
-    }
-
     setDeletingPostId(postId);
 
     try {
@@ -40,6 +37,7 @@ function AllPosts() {
       if (response.ok) {
         // Обновляем состояние, убрав удаленный пост
         setPosts(posts.filter(post => post.id !== postId));
+        toast.success('Пост успешно удален!');
       } else {
         alert('Ошибка при удалении поста');
         console.error('Ошибка при удалении поста:', response.status);

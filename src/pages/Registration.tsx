@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { RegistrationData } from '../types/auth'
 import { authApi } from '../api/auth'
+import { toast } from 'sonner';
 
 export default function Registration() {
   const [formData, setFormData] = useState<RegistrationData>({
@@ -27,7 +28,11 @@ export default function Registration() {
     try {
       const response = await authApi.signUp(formData)
       if (response.ok) {
-        alert('Регистрация успешна!')
+        toast.success('Регистрация успешна!');
+        // Redirect to login page after successful registration
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1000);
       } else {
         setError('Ошибка регистрации')
       }

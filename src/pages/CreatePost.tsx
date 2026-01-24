@@ -2,6 +2,7 @@
 import { useState, type FormEvent } from 'react'
 import { postsApi } from '../api/posts';
 import { useAuthStore } from '../store/auth/useAuthStore';
+import { toast } from 'sonner';
 
 function CreatePost() {
   const [title, setTitle] = useState('Тестовый пост');
@@ -18,12 +19,13 @@ function CreatePost() {
     })
 
     if (!user) {
-      alert('Пожалуйста, войдите в систему');
+      toast.error('Пожалуйста, войдите в систему');
       return;
     }
 
     postsApi.create({ title, description, userName: user?.name }).then((res) => {
       console.log(res);
+      toast.success('Пост успешно создан!');
     });
 
     // очистка полей
