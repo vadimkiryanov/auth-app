@@ -4,6 +4,7 @@ import type { Post } from '../types/posts';
 import { postsApi } from '../api/posts';
 import { useAuthStore } from '../store/auth/useAuthStore';
 import { toast } from 'sonner';
+import { formatDate } from '../utils/dateFormatter';
 
 function AllPosts() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -66,13 +67,13 @@ function AllPosts() {
                 <header className="flex justify-between items-start mb-2">
                   <div className="w-full">
                     <h2 className="text-lg font-semibold text-gray-900">{post.title}</h2>
+                    <p className="text-sm text-gray-700 whitespace-pre-line">{post.description}</p>
                     <div className="text-xs text-gray-500 mt-1">
-                      Автор: {post.author} · {post.created_at}
+                      Автор: {post.author} · {formatDate(post.created_at)} ·{' '}
+                      {formatDate(post.updated_at)}
                     </div>
                   </div>
                 </header>
-
-                <p className="text-sm text-gray-700 whitespace-pre-line">{post.description}</p>
               </article>
 
               {/* Кнопки удаления и редактирования видны только автору поста */}
