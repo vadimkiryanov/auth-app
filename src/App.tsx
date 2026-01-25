@@ -5,6 +5,7 @@ import { AuthLayout } from './layouts/AuthLayout';
 import { useAuthStore } from './store/auth/useAuthStore';
 import CreatePost from './pages/CreatePost';
 import AllPosts from './pages/AllPosts';
+import EditPost from './pages/EditPost';
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -63,6 +64,7 @@ function App() {
             <Route path="/" element={<>MAIN PAGE</>} />
             <Route path="/posts/create" element={<CreatePost />} />
             <Route path="/posts/all" element={<AllPosts />} />
+            <Route path="/posts/update/:id" element={<EditPost />} />
             {/* <Route path="/post/me" element={<MePosts />} /> */}
           </Route>
         </Routes>

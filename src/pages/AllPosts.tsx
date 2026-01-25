@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { Post } from '../types/posts';
 import { postsApi } from '../api/posts';
 import { useAuthStore } from '../store/auth/useAuthStore';
@@ -36,7 +37,7 @@ function AllPosts() {
 
       if (response.ok) {
         // Обновляем состояние, убрав удаленный пост
-        setPosts(posts.filter(post => post.id !== postId));
+        setPosts(posts.filter((post) => post.id !== postId));
         toast.success('Пост успешно удален!');
       } else {
         alert('Ошибка при удалении поста');
@@ -57,36 +58,46 @@ function AllPosts() {
 
         <div className="space-y-4">
           {posts?.map((post) => (
-            <article
-              key={post.id}
-              className="bg-white border border-gray-200 rounded-lg shadow-sm p-4"
-            >
-              <header className="flex justify-between items-start mb-2">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">{post.title}</h2>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Автор: {post.author} · {post.created_at}
+            <div className="flex  gap-x-4">
+              <article
+                key={post.id}
+                className="bg-whit w-full border border-gray-200 rounded-lg shadow-sm p-4"
+              >
+                <header className="flex justify-between items-start mb-2">
+                  <div className="w-full">
+                    <h2 className="text-lg font-semibold text-gray-900">{post.title}</h2>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Автор: {post.author} · {post.created_at}
+                    </div>
                   </div>
-                </div>
+                </header>
 
-                {/* Кнопка удаления видна только автору поста */}
-                {user && user.name === post.author && (
+                <p className="text-sm text-gray-700 whitespace-pre-line">{post.description}</p>
+              </article>
+
+              {/* Кнопки удаления и редактирования видны только автору поста */}
+              {user && user.name === post.author && (
+                <div className="flex space-x-2 text-sm flex-col gap-y-1  justify-center">
+                  <Link
+                    to={`/posts/update/${post.id}`}
+                    className="px-3 py-1 bg-blue-200 w-full hover:bg-blue-600 text-white rounded"
+                  >
+                    ✏️
+                  </Link>
                   <button
                     onClick={() => handleDelete(post.id)}
                     disabled={deletingPostId === post.id}
-                    className={`px-3 py-1 text-sm rounded ${
+                    className={`px-3 py-1 rounded ${
                       deletingPostId === post.id
                         ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-red-500 hover:bg-red-600 text-white'
+                        : 'bg-red-200 hover:bg-red-600 text-white'
                     }`}
                   >
-                    {deletingPostId === post.id ? 'Удаление...' : 'Удалить'}
+                    {deletingPostId === post.id ? 'Удаление...' : '🗑'}
                   </button>
-                )}
-              </header>
-
-              <p className="text-sm text-gray-700 whitespace-pre-line">{post.description}</p>
-            </article>
+                </div>
+              )}
+            </div>
           ))}
 
           {posts.length === 0 && <p className="text-sm text-gray-500">Постов пока нет.</p>}

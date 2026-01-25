@@ -2,12 +2,22 @@ import type { Post, PostCreateData } from '../types/posts';
 
 const API_BASE = 'http://localhost:8000/posts';
 
+// Helper function to get authorization token safely
+const getAuthToken = (): string => {
+  const authStore = localStorage.getItem('auth-store');
+  if (!authStore) {
+    throw new Error('Authentication token not found');
+  }
+  const parsedStore = JSON.parse(authStore);
+  return parsedStore.state.user.token;
+};
+
 export const postsApi = {
   async getAll(): Promise<{ posts: Post[] }> {
     return fetch(`${API_BASE}/all`, {
       method: 'GET',
       headers: {
-        Authorization: `${JSON.parse(localStorage.getItem('auth-store')).state.user.token}`,
+        Authorization: getAuthToken(),
         'Content-Type': 'application/json',
       },
     }).then((res) => {
@@ -21,7 +31,7 @@ export const postsApi = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json',
 
-        Authorization: `${JSON.parse(localStorage.getItem('auth-store')).state.user.token}`,
+        Authorization: getAuthToken(),
 
        },
       body: JSON.stringify(data),
@@ -33,8 +43,19 @@ export const postsApi = {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `${JSON.parse(localStorage.getItem('auth-store')).state.user.token}`,
+        Authorization: getAuthToken(),
       },
+    });
+  },
+
+  async update(postId: number, data: PostCreateData): Promise<Response> {
+    return fetch(`${API_BASE}/update/${postId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: getAuthToken(),
+      },
+      body: JSON.stringify(data),
     });
   },
 };
