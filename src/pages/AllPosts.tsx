@@ -5,31 +5,64 @@ import { postsApi } from '../api/posts';
 import { useAuthStore } from '../store/auth/useAuthStore';
 import { toast } from 'sonner';
 import { formatDate } from '../utils/dateFormatter';
+import Rating from '../components/Rating';
+import type { RatingData } from '../types/ratings';
+import { ratingsApi } from '../api/ratings';
+
+
 
 function AllPosts() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
+  const [postRatings, setPostRatings] = useState<Record<number, RatingData>>({});
   const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchData = async () => {
       try {
-        const response = postsApi.getAll();
+        // Fetch all posts
+        const postsResponse = await postsApi.getAll();
+        const fetchedPosts = postsResponse.posts || [];
+        setPosts(fetchedPosts);
 
-        const data = await response;
-        console.log({ data });
-        if (data) {
-          setPosts(data.posts);
+        // Fetch ratings for each post
+        const ratingsMap: Record<number, RatingData> = {};
+        for (const post of fetchedPosts) {
+          try {
+            const ratingResponse = await ratingsApi.getRatings(post.id);
+            // API returns stats object with likes and dislikes
+            // Convert user_vote string to proper enum type
+            const userVote = ratingResponse.stats?.user_vote;
+            let convertedUserVote: 'like' | 'dislike' | null = null;
+            if (userVote === 'like') {
+              convertedUserVote = 'like';
+            } else if (userVote === 'dislike') {
+              convertedUserVote = 'dislike';
+            }
+            
+            ratingsMap[post.id] = {
+              likes: ratingResponse.stats?.likes || 0,
+              dislikes: ratingResponse.stats?.dislikes || 0,
+              userVote: convertedUserVote,
+            };
+          } catch (error) {
+            console.error(`Failed to fetch ratings for post ${post.id}:`, error);
+            // Set default values if rating fetch fails
+            ratingsMap[post.id] = {
+              likes: 0,
+              dislikes: 0,
+              userVote: null,
+            };
+          }
         }
-        setPosts(data?.posts ?? []);
+        setPostRatings(ratingsMap);
       } catch (error) {
         console.error('Не удалось загрузить посты', error);
       }
     };
 
-    fetchPosts();
+    fetchData();
   }, []);
-
   const handleDelete = async (postId: number) => {
     setDeletingPostId(postId);
 
@@ -59,10 +92,10 @@ function AllPosts() {
 
         <div className="space-y-4">
           {posts?.map((post) => (
-            <div className="flex  gap-x-4">
+            <div className="flex gap-x-4">
               <article
                 key={post.id}
-                className="bg-whit w-full border border-gray-200 rounded-lg shadow-sm p-4"
+                className="bg-white w-full border border-gray-200 rounded-lg shadow-sm p-4"
               >
                 <header className="flex justify-between items-start mb-2">
                   <div className="w-full">
@@ -74,11 +107,19 @@ function AllPosts() {
                     </div>
                   </div>
                 </header>
+                
+                {/* Rating section */}
+                <div className="mt-3">
+                  <Rating 
+                    postId={post.id} 
+                    initialRating={postRatings[post.id]} 
+                  />
+                </div>
               </article>
 
               {/* Кнопки удаления и редактирования видны только автору поста */}
               {user && user.name === post.author && (
-                <div className="flex space-x-2 text-sm flex-col gap-y-1  justify-center">
+                <div className="flex space-x-2 text-sm flex-col gap-y-1 justify-center">
                   <Link
                     to={`/posts/update/${post.id}`}
                     className="px-3 py-1 bg-blue-200 w-full hover:bg-blue-600 text-white rounded"

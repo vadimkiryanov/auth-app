@@ -12,8 +12,6 @@ function App() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
-//   console.log(JSON.parse(localStorage.getItem('auth-store')).state.user.token);
-  
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100">
       <div className="bg-blue-300 text-white p-4 flex items-center justify-between">
@@ -59,11 +57,11 @@ function App() {
         <Routes>
           <Route path="/registration" element={<Registration />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/posts/all" element={<AllPosts />} />
 
           <Route element={<AuthLayout />}>
             <Route path="/" element={<>MAIN PAGE</>} />
             <Route path="/posts/create" element={<CreatePost />} />
-            <Route path="/posts/all" element={<AllPosts />} />
             <Route path="/posts/update/:id" element={<EditPost />} />
             {/* <Route path="/post/me" element={<MePosts />} /> */}
           </Route>

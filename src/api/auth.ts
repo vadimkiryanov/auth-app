@@ -22,3 +22,13 @@ export const authApi = {
 		});
 	},
 };
+
+// Helper function to get authorization token safely
+export const getAuthToken = (): string => {
+  const authStore = localStorage.getItem('auth-store');
+  if (!authStore) {
+    throw new Error('Authentication token not found');
+  }
+  const parsedStore = JSON.parse(authStore);
+  return parsedStore.state?.user?.token;
+};
