@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react';
-import type { PaginatedResult } from '../types/posts';
-import { postsApi } from '../api/posts';
 import { toast } from 'sonner';
-import type { RatingData } from '../types/ratings';
-import { ratingsApi } from '../api/ratings';
 import PostCard from '../components/Posts/PostCard';
 import PaginationControls from '../components/Posts/PaginationControls';
+import { aggregatedApi, type AggregatedPaginatedResult } from '../api/aggregated';
+import { postsApi } from '../api/posts';
 
 
 
 function AllPosts() {
-  const [paginatedPosts, setPaginatedPosts] = useState<PaginatedResult>({
+  const [paginatedPostsWithRatings, setPaginatedPostsWithRatings] = useState<AggregatedPaginatedResult>({
     data: [],
     total: 0,
     page: 1,
@@ -20,7 +18,6 @@ function AllPosts() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
-  const [postRatings, setPostRatings] = useState<Record<number, RatingData>>({});
 
   const limit = 10; // Number of posts per page
 
@@ -28,44 +25,12 @@ function AllPosts() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // Fetch paginated posts
-        const postsResponse = await postsApi.getAllPaginated(currentPage, limit);
-        setPaginatedPosts(postsResponse);
 
-        // Fetch ratings for each post
-        const ratingsMap: Record<number, RatingData> = {};
-        for (const post of postsResponse.data) {
-          try {
-            const ratingResponse = await ratingsApi.getRatings(post.id);
-            // API returns stats object with likes and dislikes
-            // Convert user_vote string to proper enum type
-            const userVote = ratingResponse.stats?.user_vote;
-            let convertedUserVote: 'like' | 'dislike' | null = null;
-            if (userVote === 'like') {
-              convertedUserVote = 'like';
-            } else if (userVote === 'dislike') {
-              convertedUserVote = 'dislike';
-            }
-
-            ratingsMap[post.id] = {
-              likes: ratingResponse.stats?.likes || 0,
-              dislikes: ratingResponse.stats?.dislikes || 0,
-              userVote: convertedUserVote,
-            };
-          } catch (error) {
-            console.error(`Failed to fetch ratings for post ${post.id}:`, error);
-            // Set default values if rating fetch fails
-            ratingsMap[post.id] = {
-              likes: 0,
-              dislikes: 0,
-              userVote: null,
-            };
-          }
-        }
-        setPostRatings(ratingsMap);
+        // Fetch posts with ratings in a single request
+        const response = await aggregatedApi.getPostsWithRatings(currentPage, limit);
+        setPaginatedPostsWithRatings(response);
       } catch (error) {
-        console.error('Не удалось загрузить посты', error);
+        console.error('Не удалось загрузить посты с рейтингами', error);
       } finally {
         setLoading(false);
       }
@@ -73,6 +38,7 @@ function AllPosts() {
 
     fetchData();
   }, [currentPage]);
+
   const handleDelete = async (postId: number) => {
     setDeletingPostId(postId);
 
@@ -81,8 +47,8 @@ function AllPosts() {
 
       if (response.ok) {
         // Refresh the current page after deletion
-        const postsResponse = await postsApi.getAllPaginated(currentPage, limit);
-        setPaginatedPosts(postsResponse);
+        const refreshedResponse = await aggregatedApi.getPostsWithRatings(currentPage, limit);
+        setPaginatedPostsWithRatings(refreshedResponse);
         toast.success('Пост успешно удален!');
       } else {
         alert('Ошибка при удалении поста');
@@ -98,13 +64,13 @@ function AllPosts() {
 
   // Handle pagination navigation
   const goToPage = (page: number) => {
-    if (page >= 1 && page <= paginatedPosts.total_pages) {
+    if (page >= 1 && page <= paginatedPostsWithRatings.total_pages) {
       setCurrentPage(page);
     }
   };
 
   const nextPage = () => {
-    if (currentPage < paginatedPosts.total_pages) {
+    if (currentPage < paginatedPostsWithRatings.total_pages) {
       setCurrentPage(currentPage + 1);
     }
   };
@@ -127,11 +93,11 @@ function AllPosts() {
         ) : (
           <>
             <div className="space-y-4">
-              {paginatedPosts.data?.map((post) => (
+              {paginatedPostsWithRatings.data?.map((postWithRating) => (
                 <PostCard
-                  key={post.id}
-                  post={post}
-                  rating={postRatings[post.id] || { likes: 0, dislikes: 0, userVote: null }}
+                  key={postWithRating.id}
+                  post={postWithRating}
+                  rating={postWithRating.rating}
                   onDelete={handleDelete}
                   deletingPostId={deletingPostId}
                 />
@@ -139,18 +105,18 @@ function AllPosts() {
             </div>
 
             {/* Pagination Controls */}
-            {paginatedPosts.total_pages > 1 && (
+            {paginatedPostsWithRatings.total_pages > 1 && (
               <PaginationControls
                 currentPage={currentPage}
-                totalPages={paginatedPosts.total_pages}
-                totalItems={paginatedPosts.total}
+                totalPages={paginatedPostsWithRatings.total_pages}
+                totalItems={paginatedPostsWithRatings.total}
                 onPageChange={goToPage}
                 onNext={nextPage}
                 onPrev={prevPage}
               />
             )}
 
-            {paginatedPosts.data.length === 0 && !loading && (
+            {paginatedPostsWithRatings.data.length === 0 && !loading && (
               <p className="text-sm text-gray-500 text-center py-4">Постов пока нет.</p>
             )}
           </>
