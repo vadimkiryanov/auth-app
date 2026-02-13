@@ -1,4 +1,4 @@
-import type { Post, PostCreateData } from '../types/posts';
+import type { PaginatedResult, Post, PostCreateData } from '../types/posts';
 import { getAuthToken } from './auth';
 import { API_BASE_POSTS } from './config';
 
@@ -14,6 +14,22 @@ export const postsApi = {
       },
     }).then((res) => {
       // console.log(res.json());
+      return res.json();
+    });
+  },
+
+  async getAllPaginated(page: number = 1, limit: number = 10): Promise<PaginatedResult> {
+    const token = getAuthToken();
+    const authField = token ? { Authorization: getAuthToken() } : undefined;
+    const offset = (page - 1) * limit;
+    
+    return fetch(`${API_BASE_POSTS}/all-paginated?page=${page}&limit=${limit}&offset=${offset}`, {
+      method: 'GET',
+      headers: {
+        ...authField,
+        'Content-Type': 'application/json',
+      },
+    }).then((res) => {
       return res.json();
     });
   },

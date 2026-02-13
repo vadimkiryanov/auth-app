@@ -1,33 +1,41 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import type { Post } from '../types/posts';
+import type { PaginatedResult } from '../types/posts';
 import { postsApi } from '../api/posts';
-import { useAuthStore } from '../store/auth/useAuthStore';
 import { toast } from 'sonner';
-import { formatDate } from '../utils/dateFormatter';
-import Rating from '../components/Rating';
 import type { RatingData } from '../types/ratings';
 import { ratingsApi } from '../api/ratings';
+import PostCard from '../components/Posts/PostCard';
+import PaginationControls from '../components/Posts/PaginationControls';
 
 
 
 function AllPosts() {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [paginatedPosts, setPaginatedPosts] = useState<PaginatedResult>({
+    data: [],
+    total: 0,
+    page: 1,
+    limit: 10,
+    total_pages: 1
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
   const [postRatings, setPostRatings] = useState<Record<number, RatingData>>({});
-  const user = useAuthStore((state) => state.user);
+
+  const limit = 10; // Number of posts per page
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch all posts
-        const postsResponse = await postsApi.getAll();
-        const fetchedPosts = postsResponse.posts || [];
-        setPosts(fetchedPosts);
+        setLoading(true);
+        
+        // Fetch paginated posts
+        const postsResponse = await postsApi.getAllPaginated(currentPage, limit);
+        setPaginatedPosts(postsResponse);
 
         // Fetch ratings for each post
         const ratingsMap: Record<number, RatingData> = {};
-        for (const post of fetchedPosts) {
+        for (const post of postsResponse.data) {
           try {
             const ratingResponse = await ratingsApi.getRatings(post.id);
             // API returns stats object with likes and dislikes
@@ -39,7 +47,7 @@ function AllPosts() {
             } else if (userVote === 'dislike') {
               convertedUserVote = 'dislike';
             }
-            
+
             ratingsMap[post.id] = {
               likes: ratingResponse.stats?.likes || 0,
               dislikes: ratingResponse.stats?.dislikes || 0,
@@ -58,11 +66,13 @@ function AllPosts() {
         setPostRatings(ratingsMap);
       } catch (error) {
         console.error('Не удалось загрузить посты', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [currentPage]);
   const handleDelete = async (postId: number) => {
     setDeletingPostId(postId);
 
@@ -70,8 +80,9 @@ function AllPosts() {
       const response = await postsApi.delete(postId);
 
       if (response.ok) {
-        // Обновляем состояние, убрав удаленный пост
-        setPosts(posts.filter((post) => post.id !== postId));
+        // Refresh the current page after deletion
+        const postsResponse = await postsApi.getAllPaginated(currentPage, limit);
+        setPaginatedPosts(postsResponse);
         toast.success('Пост успешно удален!');
       } else {
         alert('Ошибка при удалении поста');
@@ -85,65 +96,65 @@ function AllPosts() {
     }
   };
 
+  // Handle pagination navigation
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= paginatedPosts.total_pages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const nextPage = () => {
+    if (currentPage < paginatedPosts.total_pages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   return (
     <div className="bg-gray-100 py-8">
       <div className="max-w-3xl mx-auto px-4">
         <h1 className="text-2xl font-semibold mb-6 text-gray-800">Посты пользователей</h1>
 
-        <div className="space-y-4">
-          {posts?.map((post) => (
-            <div className="flex gap-x-4">
-              <article
-                key={post.id}
-                className="bg-white w-full border border-gray-200 rounded-lg shadow-sm p-4"
-              >
-                <header className="flex justify-between items-start mb-2">
-                  <div className="w-full">
-                    <h2 className="text-lg font-semibold text-gray-900">{post.title}</h2>
-                    <p className="text-sm text-gray-700 whitespace-pre-line">{post.description}</p>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Автор: {post.author} · {formatDate(post.created_at)} ·{' '}
-                      {formatDate(post.updated_at)}
-                    </div>
-                  </div>
-                </header>
-                
-                {/* Rating section */}
-                <div className="mt-3">
-                  <Rating 
-                    postId={post.id} 
-                    initialRating={postRatings[post.id]} 
-                  />
-                </div>
-              </article>
-
-              {/* Кнопки удаления и редактирования видны только автору поста */}
-              {user && user.name === post.author && (
-                <div className="flex space-x-2 text-sm flex-col gap-y-1 justify-center">
-                  <Link
-                    to={`/posts/update/${post.id}`}
-                    className="px-3 py-1 bg-blue-200 w-full hover:bg-blue-600 text-white rounded"
-                  >
-                    ✏️
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(post.id)}
-                    disabled={deletingPostId === post.id}
-                    className={`px-3 py-1 rounded ${
-                      deletingPostId === post.id
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-red-200 hover:bg-red-600 text-white'
-                    }`}
-                  >
-                    {deletingPostId === post.id ? 'Удаление...' : '🗑'}
-                  </button>
-                </div>
-              )}
+        {loading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-600">Загрузка постов...</p>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-4">
+              {paginatedPosts.data?.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  rating={postRatings[post.id] || { likes: 0, dislikes: 0, userVote: null }}
+                  onDelete={handleDelete}
+                  deletingPostId={deletingPostId}
+                />
+              ))}
             </div>
-          ))}
 
-          {posts.length === 0 && <p className="text-sm text-gray-500">Постов пока нет.</p>}
-        </div>
+            {/* Pagination Controls */}
+            {paginatedPosts.total_pages > 1 && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={paginatedPosts.total_pages}
+                totalItems={paginatedPosts.total}
+                onPageChange={goToPage}
+                onNext={nextPage}
+                onPrev={prevPage}
+              />
+            )}
+
+            {paginatedPosts.data.length === 0 && !loading && (
+              <p className="text-sm text-gray-500 text-center py-4">Постов пока нет.</p>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

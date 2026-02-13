@@ -13,3 +13,16 @@ export type PostCreateData = {
   description: string;
 };
 
+export type PaginatedResult = {
+  data: Post[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+};
+
+export type PaginationParams = {
+  limit: number;
+  offset: number;
+};
+
