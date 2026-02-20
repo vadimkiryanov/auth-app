@@ -56,8 +56,8 @@ function PaginationControls({
           disabled={currentPage === 1}
           className={`px-4 py-2 rounded ${
             currentPage === 1
-              ? 'bg-gray-300 cursor-not-allowed'
-              : 'bg-blue-500 hover:bg-blue-600 text-white'
+              ? 'bg-neutral-500 cursor-not-allowed'
+              : 'bg-neutral-500 hover:bg-neutral-600 text-white'
           }`}
         >
           Назад
@@ -71,8 +71,8 @@ function PaginationControls({
               onClick={() => goToPage(page)}
               className={`px-4 py-2 rounded ${
                 currentPage === page
-                  ? 'bg-blue-700 text-white'
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  ? 'bg-neutral-700 text-white'
+                  : 'bg-neutral-500 hover:bg-neutral-600 text-white'
               }`}
             >
               {page}
@@ -89,8 +89,8 @@ function PaginationControls({
           disabled={currentPage === totalPages}
           className={`px-4 py-2 rounded ${
             currentPage === totalPages
-              ? 'bg-gray-300 cursor-not-allowed'
-              : 'bg-blue-500 hover:bg-blue-600 text-white'
+              ? 'bg-neutral-500 cursor-not-allowed'
+              : 'bg-neutral-500 hover:bg-neutral-600 text-white'
           }`}
         >
           Вперед

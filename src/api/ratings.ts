@@ -30,4 +30,14 @@ export const ratingsApi = {
       body: JSON.stringify(data.action),
     });
   },
+
+  async deleteVote(postId: number): Promise<Response> {
+    return fetch(`${API_BASE}/ratings/vote/${postId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: getAuthToken(),
+      },
+    });
+  },
 };

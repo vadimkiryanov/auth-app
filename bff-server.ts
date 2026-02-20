@@ -13,14 +13,14 @@ app.use(express.json());
 // Агрегирующий эндпоинт для постов с рейтингами
 app.get('/api/posts-with-ratings', async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, sortBy = 'created_at', sortOrder = 'DESC' } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
     
     // Извлекаем токен из заголовков запроса клиента
     const authHeader = req.headers.authorization || '';
 
     // Получаем посты
-    const postsResponse = await axios.get<PaginatedResult>(`http://localhost:8000/posts/all-paginated?page=${page}&limit=${limit}&offset=${offset}`, {
+    const postsResponse = await axios.get<PaginatedResult>(`http://localhost:8000/posts/all-paginated?page=${page}&limit=${limit}&offset=${offset}&sortBy=${sortBy}&sortOrder=${sortOrder}`, {
       headers: {
         'Authorization': authHeader,
         'Content-Type': 'application/json'

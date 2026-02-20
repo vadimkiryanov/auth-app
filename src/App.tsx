@@ -13,15 +13,16 @@ function App() {
   const logout = useAuthStore((state) => state.logout);
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100">
-      <div className="bg-blue-300 text-white p-4 flex items-center justify-between">
+    <div className="min-h-screen bg-neutral-900">
+        {/* Header */}
+      <div className="bg-neutral-800 text-white p-4 flex items-center justify-between">
         <h4 className="font-semibold">Личный кабинет</h4>
         <div>
           <span>{user?.name ?? 'Авторизуйтесь'}</span>
           {isAuthenticated && (
             <button
               onClick={logout}
-              className="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              className="ml-2 bg-neutral-700 hover:bg-neutral-600 text-white font-bold py-2 px-4 rounded"
             >
               Выйти
             </button>
@@ -29,22 +30,23 @@ function App() {
         </div>
       </div>
 
-      <nav className="flex items-center justify-between bg-blue-200 p-4">
+      {/* Navigation */}
+      <nav className="flex items-center justify-between bg-neutral-800 p-4">
         <ul className="flex items-center gap-4">
           <li>
-            <Link to="/" className="text-blue-500 hover:text-blue-700">
+            <Link to="/" className="text-neutral-300 hover:text-white">
               Главная
             </Link>
           </li>
           {isAuthenticated && (
             <>
               <li>
-                <Link to="/posts/create" className="text-blue-500 hover:text-blue-700">
+                <Link to="/posts/create" className="text-neutral-300 hover:text-white">
                   Создать пост
                 </Link>
               </li>
               <li>
-                <Link to="/posts/all" className="text-blue-500 hover:text-blue-700">
+                <Link to="/posts/all" className="text-neutral-300 hover:text-white">
                   Посты
                 </Link>
               </li>
@@ -53,7 +55,7 @@ function App() {
         </ul>
       </nav>
 
-      <div className="px-4 py-8 text-blue-300 text-center">
+      <div className="px-4 py-8 text-gray-300 text-center">
         <Routes>
           <Route path="/registration" element={<Registration />} />
           <Route path="/login" element={<Login />} />

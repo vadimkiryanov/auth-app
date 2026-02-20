@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import PostCard from '../components/Posts/PostCard';
 import PaginationControls from '../components/Posts/PaginationControls';
+import SortToggle from '../components/Posts/SortToggle';
 import { aggregatedApi, type AggregatedPaginatedResult } from '../api/aggregated';
 import { postsApi } from '../api/posts';
 
@@ -18,7 +19,8 @@ function AllPosts() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
-
+  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
+  
   const limit = 10; // Number of posts per page
 
   useEffect(() => {
@@ -27,7 +29,7 @@ function AllPosts() {
         setLoading(true);
 
         // Fetch posts with ratings in a single request
-        const response = await aggregatedApi.getPostsWithRatings(currentPage, limit);
+        const response = await aggregatedApi.getPostsWithRatings(currentPage, limit, 'created_at', sortOrder);
         setPaginatedPostsWithRatings(response);
       } catch (error) {
         console.error('Не удалось загрузить посты с рейтингами', error);
@@ -37,7 +39,7 @@ function AllPosts() {
     };
 
     fetchData();
-  }, [currentPage]);
+  }, [currentPage, sortOrder]);
 
   const handleDelete = async (postId: number) => {
     setDeletingPostId(postId);
@@ -47,7 +49,7 @@ function AllPosts() {
 
       if (response.ok) {
         // Refresh the current page after deletion
-        const refreshedResponse = await aggregatedApi.getPostsWithRatings(currentPage, limit);
+        const refreshedResponse = await aggregatedApi.getPostsWithRatings(currentPage, limit, 'created_at', sortOrder);
         setPaginatedPostsWithRatings(refreshedResponse);
         toast.success('Пост успешно удален!');
       } else {
@@ -82,13 +84,21 @@ function AllPosts() {
   };
 
   return (
-    <div className="bg-gray-100 py-8">
+    <div className="py-8">
       <div className="max-w-3xl mx-auto px-4">
-        <h1 className="text-2xl font-semibold mb-6 text-gray-800">Посты пользователей</h1>
+        {/* <h1 className="text-2xl font-semibold mb-6 text-gray-200">Посты пользователей</h1> */}
+
+        {/* Sorting controls */}
+        <div className="mb-6 flex items-center justify-between gap-4 max-w-fit bg-neutral-800 rounded-xl shadow">
+          <SortToggle
+            sortOrder={sortOrder}
+            onToggle={() => setSortOrder(sortOrder === 'ASC' ? 'DESC' : 'ASC')}
+          />
+        </div>
 
         {loading ? (
           <div className="text-center py-8">
-            <p className="text-gray-600">Загрузка постов...</p>
+            <p className="text-gray-500">Загрузка постов...</p>
           </div>
         ) : (
           <>
@@ -117,7 +127,7 @@ function AllPosts() {
             )}
 
             {paginatedPostsWithRatings.data.length === 0 && !loading && (
-              <p className="text-sm text-gray-500 text-center py-4">Постов пока нет.</p>
+              <p className="text-sm text-gray-600 text-center py-4">Постов пока нет.</p>
             )}
           </>
         )}

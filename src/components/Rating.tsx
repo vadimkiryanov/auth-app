@@ -26,7 +26,11 @@ const Rating = ({ postId, initialRating }: RatingProps) => {
       // Determine if this is toggling off the current vote
       const isTogglingOff = rating.userVote === action;
 
-      await ratingsApi.vote(postId, { action });
+      if (isTogglingOff) {
+        await ratingsApi.deleteVote(postId);
+      } else {
+          await ratingsApi.vote(postId, { action });
+      }
 
       // Update the local state optimistically
       setRating((prev) => {
@@ -119,32 +123,32 @@ const Rating = ({ postId, initialRating }: RatingProps) => {
   }, [initialRating]);
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-1">
       <button
         onClick={handleLikeClick}
         disabled={loading || !user?.name}
-        className={`flex items-center space-x-1 px-3 py-1 rounded-md transition-colors ${
+        className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors ${
           rating.userVote === 'like'
-            ? 'bg-green-500 text-white'
-            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-        } ${(loading || !user?.name) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            ? 'bg-neutral-600 text-white'
+            : 'bg-neutral-700 hover:bg-neutral-600 text-gray-300'
+        } ${(!user?.name) ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
-        <span>👍</span>
-        <span>{rating.likes}</span>
+        <span className="text-sm">❤️</span>
       </button>
+      {rating.likes > 0 && <span className="text-xs font-medium text-gray-500 min-w-[16px] text-center">{rating.likes}</span>}
 
       <button
         onClick={handleDislikeClick}
         disabled={loading || !user?.name}
-        className={`flex items-center space-x-1 px-3 py-1 rounded-md transition-colors ${
+        className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors ${
           rating.userVote === 'dislike'
-            ? 'bg-red-500 text-white'
-            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-        } ${(loading || !user?.name) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            ? 'bg-neutral-600 text-white'
+            : 'bg-neutral-700 hover:bg-neutral-600 text-gray-300'
+        } ${(!user?.name) ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
-        <span>👎</span>
-        <span>{rating.dislikes}</span>
+        <span className="text-sm">👎</span>
       </button>
+      {rating.dislikes > 0 && <span className="text-xs font-medium text-gray-500 min-w-[16px] text-center">{rating.dislikes}</span>}
     </div>
   );
 };

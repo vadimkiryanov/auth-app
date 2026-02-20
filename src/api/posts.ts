@@ -18,12 +18,12 @@ export const postsApi = {
     });
   },
 
-  async getAllPaginated(page: number = 1, limit: number = 10): Promise<PaginatedResult> {
+  async getAllPaginated(page: number = 1, limit: number = 10, sortBy: string = 'created_at', sortOrder: string = 'DESC'): Promise<PaginatedResult> {
     const token = getAuthToken();
     const authField = token ? { Authorization: getAuthToken() } : undefined;
     const offset = (page - 1) * limit;
     
-    return fetch(`${API_BASE_POSTS}/all-paginated?page=${page}&limit=${limit}&offset=${offset}`, {
+    return fetch(`${API_BASE_POSTS}/all-paginated?page=${page}&limit=${limit}&offset=${offset}&sortBy=${sortBy}&sortOrder=${sortOrder}`, {
       method: 'GET',
       headers: {
         ...authField,
