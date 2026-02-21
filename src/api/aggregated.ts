@@ -1,4 +1,5 @@
 import { getAuthToken } from './auth';
+import type { Comment } from '../types/comments';
 
 export interface PostWithRating {
   id: number;
@@ -12,6 +13,12 @@ export interface PostWithRating {
     dislikes: number;
     userVote: 'like' | 'dislike' | null;
   };
+  comments?: Comment[];
+}
+
+export interface PostDetailData {
+  post: PostWithRating;
+  comments: Comment[];
 }
 
 export interface AggregatedPaginatedResult {
@@ -28,8 +35,21 @@ export const aggregatedApi = {
     const authHeaders = token ? { 'Authorization': token } : undefined;
 
     const offset = (page - 1) * limit;
-    
+
     return fetch(`http://localhost:8080/api/posts-with-ratings?page=${page}&limit=${limit}&offset=${offset}&sortBy=${sortBy}&sortOrder=${sortOrder}`, {
+      method: 'GET',
+      headers: {
+        ...authHeaders,
+        'Content-Type': 'application/json',
+      },
+    }).then((res) => res.json());
+  },
+
+  async getPostDetail(postId: number): Promise<PostDetailData> {
+    const token = getAuthToken();
+    const authHeaders = token ? { 'Authorization': token } : undefined;
+
+    return fetch(`http://localhost:8080/api/posts/${postId}`, {
       method: 'GET',
       headers: {
         ...authHeaders,

@@ -126,7 +126,7 @@ function AllPosts() {
               />
             )}
 
-            {paginatedPostsWithRatings.data.length === 0 && !loading && (
+            {paginatedPostsWithRatings?.data?.length === 0 && !loading && (
               <p className="text-sm text-gray-600 text-center py-4">Постов пока нет.</p>
             )}
           </>

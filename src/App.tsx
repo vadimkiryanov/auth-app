@@ -6,6 +6,7 @@ import { useAuthStore } from './store/auth/useAuthStore';
 import CreatePost from './pages/CreatePost';
 import AllPosts from './pages/AllPosts';
 import EditPost from './pages/EditPost';
+import PostDetail from './pages/PostDetail';
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -60,6 +61,7 @@ function App() {
           <Route path="/registration" element={<Registration />} />
           <Route path="/login" element={<Login />} />
           <Route path="/posts/all" element={<AllPosts />} />
+          <Route path="/posts/:id" element={<PostDetail />} />
 
           <Route element={<AuthLayout />}>
             <Route path="/" element={<>MAIN PAGE</>} />

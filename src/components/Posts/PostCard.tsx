@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { MessageSquare } from 'lucide-react';
 import type { Post } from '../../types/posts';
 import type { RatingData } from '../../types/ratings';
+import type { Comment } from '../../types/comments';
 import Rating from '../Rating';
 import { formatDate } from '../../utils/dateFormatter';
 import { useAuthStore } from '../../store/auth/useAuthStore';
 
 interface PostCardProps {
-  post: Post;
+  post: Post & { comments?: Comment[] };
   rating: RatingData;
   onDelete: (postId: number) => void;
   deletingPostId: number | null;
@@ -37,17 +39,21 @@ function PostCard({ post, rating, onDelete, deletingPostId }: PostCardProps) {
 
   return (
     <div className="relative">
-      <article className="bg-neutral-800 w-full rounded-xl shadow-sm p-4 pb-10"> {/* Added pb-10 to make space for rating at bottom */}
+      <article className="bg-neutral-800 w-full rounded-xl shadow-sm p-4 pb-4">
         <header className="flex justify-between items-start mb-2">
           <div className="w-full">
-            <h2 className="text-lg font-semibold text-gray-200">{post.title}</h2>
+            <Link to={`/posts/${post.id}`} className="block group">
+              <h2 className="text-lg font-semibold text-gray-200 group-hover:text-blue-400 transition-colors">
+                {post.title}
+              </h2>
+            </Link>
             <p className="text-sm text-gray-200 whitespace-pre-line">{post.description}</p>
             <div className="text-xs text-gray-400 mt-1">
               Автор: {post.author} · {formatDate(post.created_at)} ·{' '}
               {formatDate(post.updated_at)}
             </div>
           </div>
-          
+
           {/* Dropdown menu for author actions */}
           {user && user.name === post.author && (
             <div ref={dropdownRef} className="relative ml-2">
@@ -91,9 +97,28 @@ function PostCard({ post, rating, onDelete, deletingPostId }: PostCardProps) {
             </div>
           )}
         </header>
-  
+
+        {/* Comments preview */}
+        {post.comments && post.comments.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-neutral-700">
+            <Link to={`/posts/${post.id}`} className="flex items-center gap-2 text-xs text-gray-400 hover:text-gray-300 mb-2">
+              <MessageSquare className="w-4 h-4" />
+              <span>Комментарии ({post.comments.length}+)</span>
+            </Link>
+            <div className="space-y-2 flex justify-start flex-col">
+              {post.comments.map((comment) => (
+                <div key={comment.id} className="flex items-center gap-2 text-sm">
+                  <span className="font-medium text-gray-300">{comment.author}:</span>
+                  <span className="text-gray-400 line-clamp-2">{comment.content}</span>
+                </div>
+              ))}
+            </div>
+            
+          </div>
+        )}
+
         {/* Rating section - moved to bottom right */}
-        <div className="absolute bottom-2 right-2">
+        <div className="w-fit ml-auto">
           <Rating
             postId={post.id}
             initialRating={rating}
